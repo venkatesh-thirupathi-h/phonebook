@@ -1,15 +1,21 @@
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 
 
+const BASE_URL = "/api/persons";
 const MILLION = 1_000_000;
 const app = express();
+
+// logging
+app.use(cors());
 app.use(express.json())
-// morgan.token('body', (req, res) => {
-//     return JSON.stringify(req.body);
-// })
-// app.use(morgan('tiny'));
-// app.use(morgan(':body'));
+morgan.token('body', (req, res) => {
+    return JSON.stringify(req.body);
+})
+app.use(morgan('tiny'));
+app.use(morgan(':body'));
+
 let persons = [
     {
         id: 1,
@@ -33,12 +39,12 @@ let persons = [
     },
 ];
 
-app.get("/api/persons", (req, res) => {
+app.get(`${BASE_URL}`, (req, res) => {
     res.json(persons);
 });
 
 
-app.post("/api/persons", (req, res) => {
+app.post(`${BASE_URL}`, (req, res) => {
     const body = req.body;
     if (!body.name || !body.number) {
         return res.status(422).send({error: "incorrect repr of person object"})
@@ -55,13 +61,19 @@ app.post("/api/persons", (req, res) => {
     res.send(newPerson)
 })
 
-app.get("/api/persons/:id", (req, res) => {
+app.get(`${BASE_URL}/:id`, (req, res) => {
     const id = Number(req.params.id);
     const person = persons.find(person => person.id === id);
     res.json(person);
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+
+// implement it late
+// app.put(`${BASE_URL}/:id`, (req, res) => {
+//     
+// });
+
+app.delete(`${BASE_URL}/:id`, (req, res) => {
     const id = Number(req.params.id);
     const person = persons.find(p => p.id === id);
     if (!person) {
@@ -97,8 +109,9 @@ app.get("/info", (req, res) => {
     res.send(response);
 })
 
-const PORT = 3000
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);
-console.log('listening on port', PORT)
+console.log('listening on port', PORT);
 
+// middle ware for handling unknown endpoints.
 app.use(unknownEndpoint);
